@@ -1,0 +1,43 @@
+---
+# https://github.com/Stouts/Stouts.openvpn
+# https://github.com/darrylanderson/ansible-aws/tree/master/playbooks/roles/openvpn
+# https://www.andersontech.consulting/multifactor-everything/
+
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+  - name: Install python2 for Ansible
+    raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+    register: output
+    changed_when: output.stdout != ""
+
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - lineinfile:
+        path: /etc/sysctl.conf
+        regexp: '^net.ipv4.ip_forward='
+        line: 'net.ipv4.ip_forward=1'
+      
+
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+  - openvpn
+  vars:
+    openvpn_key_country: RU
+    openvpn_key_province: Moscow
+    openvpn_key_city: Moscow
+    openvpn_key_org: Medsolutions
+    openvpn_key_email: info@medsolutions.ru
+    openvpn_key_size: 2048
+    openvpn_use_pam: yes
+    openvpn_proto: tcp
+    openvpn_topology: subnet
+    openvpn_server_options:
+      - push "route 10.0.5.0 255.255.0.0"
